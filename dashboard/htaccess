@@ -1,0 +1,16 @@
+# Campus Asset Tracker – Dashboard Clean URL
+# Allows http://localhost/dashboard/ instead of /dashboard/dashboard.py
+# AllowOverride All is already set in your httpd.conf so this works as-is.
+
+Options +ExecCGI
+AddHandler cgi-script .py
+
+RewriteEngine On
+
+# Route bare directory request to the CGI script
+RewriteRule ^$ dashboard.py [L,QSA]
+
+# Route /dashboard and /dashboard/ cleanly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^.]+)$ $1.py [L,QSA]
