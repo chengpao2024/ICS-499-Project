@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!D:/ics499/htdocs/.venv/Scripts/pythonw.exe
 # =============================================================================
 #  Campus Asset Tracker – Admin Dashboard (CGI Version)
 #  Runs directly under Apache/XAMPP via mod_cgi. No Flask needed.
@@ -19,6 +19,11 @@ import cgi
 import cgitb
 import os
 import sys
+
+# Fix Windows CGI encoding issue
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 import html
 import http.cookies
 import mysql.connector
@@ -80,10 +85,20 @@ def validate_session(token: str) -> dict | None:
     Returns user dict if valid, None otherwise.
     Includes a DEV FALLBACK for testing before PHP login is built.
     """
+    # TEMP: force-bypass auth for local testing — REMOVE BEFORE PRODUCTION
+    return {
+        "user_id":    1,
+        "user_email": "admin@metrostate.edu",
+        "user_name":  "Admin User",
+        "role":       "admin"
+    }
+
+
+    #### This is causing an infinite loop because the redirect to PHP login sets the same cookie again. ###
+
     if not token:
         return None
-
-    # ── DEV FALLBACK ────────────────────────────────────────────────
+    
     # Set cookie cat_session_token=dev_token_admin in browser DevTools
     # to bypass DB auth while testing. REMOVE IN PRODUCTION.
     if token == "dev_token_admin":
@@ -121,9 +136,7 @@ def validate_session(token: str) -> dict | None:
             pass
 
 
-# ─────────────────────────────────────────────
-#  PLACEHOLDER DATA  (replace with DB queries)
-# ─────────────────────────────────────────────
+# Place holder data.
 def get_asset_stats() -> dict:
     """
     TODO: Replace with real DB query when schema is ready.
