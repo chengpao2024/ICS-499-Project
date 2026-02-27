@@ -1,7 +1,7 @@
-#!D:/ics499/htdocs/.venv/Scripts/pythonw.exe
+#!D:\ics499\htdocs\.venv\Scripts\pythonw.exe
 # =============================================================================
 #  Campus Asset Tracker – Admin Dashboard (CGI Version)
-#  Runs directly under Apache/XAMPP via mod_cgi. No Flask needed.
+#  Runs directly under Apache/XAMPP via mod_cgi.
 #
 #  URL:  http://localhost/dashboard/dashboard.py
 #        http://localhost/dashboard/          (with .htaccess clean URL)
@@ -18,9 +18,9 @@
 import cgi
 import cgitb
 import os
-import sys
 
-# Fix Windows CGI encoding issue
+import sys
+# Fix Windows CGI encoding
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -33,9 +33,7 @@ from mysql.connector import Error
 # DISABLE THIS IN PRODUCTION by removing or commenting it out.
 cgitb.enable()
 
-# ─────────────────────────────────────────────
-#  DATABASE CONFIG  (matches D:/ics499 XAMPP)
-# ─────────────────────────────────────────────
+# Will need to configure this for our db later
 DB_CONFIG = {
     "host":     "localhost",
     "user":     "root",
@@ -44,13 +42,12 @@ DB_CONFIG = {
     "port":     3306
 }
 
-PHP_LOGIN_URL = "http://localhost/index.php"
+PHP_LOGIN_URL = "http://localhost/index.php"   # login page
 SESSION_COOKIE_NAME = "cat_session_token"
 
 
-# ─────────────────────────────────────────────
+
 #  HELPERS
-# ─────────────────────────────────────────────
 def get_db_connection():
     try:
         return mysql.connector.connect(**DB_CONFIG)
@@ -58,17 +55,9 @@ def get_db_connection():
         return None
 
 
-def get_cookie_value(name: str) -> str | None:
-    """Read a single cookie from the HTTP_COOKIE environment variable."""
-    raw = os.environ.get("HTTP_COOKIE", "")
-    if not raw:
-        return None
-    jar = http.cookies.SimpleCookie()
-    try:
-        jar.load(raw)
-    except Exception:
-        return None
-    return jar[name].value if name in jar else None
+def get_token(form) -> str | None:
+    """Read token from URL query string (?token=...) or hidden form field."""
+    return form.getvalue("token", None)
 
 
 def redirect(url: str):
@@ -81,34 +70,11 @@ def redirect(url: str):
 
 def validate_session(token: str) -> dict | None:
     """
-    Validates token against the php_sessions table.
-    Returns user dict if valid, None otherwise.
-    Includes a DEV FALLBACK for testing before PHP login is built.
+    Validates token against the php_sessions table written by index.php.
+    Returns user dict if valid and not expired, None otherwise.
     """
-    # TEMP: force-bypass auth for local testing — REMOVE BEFORE PRODUCTION
-    return {
-        "user_id":    1,
-        "user_email": "admin@metrostate.edu",
-        "user_name":  "Admin User",
-        "role":       "admin"
-    }
-
-
-    #### This is causing an infinite loop because the redirect to PHP login sets the same cookie again. ###
-
     if not token:
         return None
-    
-    # Set cookie cat_session_token=dev_token_admin in browser DevTools
-    # to bypass DB auth while testing. REMOVE IN PRODUCTION.
-    if token == "dev_token_admin":
-        return {
-            "user_id":    1,
-            "user_email": "admin@metrostate.edu",
-            "user_name":  "Admin User",
-            "role":       "admin"
-        }
-    # ────────────────────────────────────────────────────────────────
 
     conn = get_db_connection()
     if conn is None:
@@ -136,7 +102,7 @@ def validate_session(token: str) -> dict | None:
             pass
 
 
-# Place holder data.
+#  PLACEHOLDER DATA  (replace with DB queries later)
 def get_asset_stats() -> dict:
     """
     TODO: Replace with real DB query when schema is ready.
@@ -204,11 +170,15 @@ def get_assets(search="", category="", status="") -> list:
     return filtered
 
 
-# ─────────────────────────────────────────────
-#  LOGOUT ACTION
-# ─────────────────────────────────────────────
+# LOGOUT ACTION
 def handle_logout(token: str):
-    """Delete token from DB, clear cookie, redirect to PHP login."""
+    # Token handling is there, not using at the moment
+    """
+    Delete token from MySQL (invalidates Python session),
+    expire the cookie, then redirect to PHP login page.
+    PHP session itself is destroyed by logout.php if user
+    came from there — or expires naturally otherwise.
+    """
     if token:
         conn = get_db_connection()
         if conn:
@@ -222,17 +192,15 @@ def handle_logout(token: str):
                 try: cursor.close(); conn.close()
                 except Exception: pass
 
-    # Expire the cookie by setting its max-age to 0
     print("Status: 302 Found")
     print(f"Location: {PHP_LOGIN_URL}")
-    print("Set-Cookie: cat_session_token=; Max-Age=0; Path=/; HttpOnly")
+    # Expire the cookie immediately
+    print("Set-Cookie: cat_session_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax")
     print()
     sys.exit(0)
 
 
-# ─────────────────────────────────────────────
 #  HTML RENDERING
-# ─────────────────────────────────────────────
 def status_badge(status: str) -> str:
     classes = {
         "Available":         "badge-available",
@@ -248,7 +216,7 @@ def render_dashboard(user: dict, stats: dict, assets: list,
                      categories: list, statuses: list) -> str:
     """Build and return the full dashboard HTML string."""
 
-    # ── Asset table rows ──────────────────────────────────────────
+    #  Asset table rows 
     if assets:
         rows_html = ""
         for a in assets:
@@ -302,21 +270,21 @@ def render_dashboard(user: dict, stats: dict, assets: list,
           </td>
         </tr>"""
 
-    # ── Category options ──────────────────────────────────────────
+    # Category options 
     cat_options = "".join(
         f'<option value="{html.escape(c)}" {"selected" if category == c else ""}>'
         f'{html.escape(c)}</option>'
         for c in categories
     )
 
-    # ── Status options ────────────────────────────────────────────
+    # Status options
     st_options = "".join(
         f'<option value="{html.escape(s)}" {"selected" if status == s else ""}>'
         f'{html.escape(s)}</option>'
         for s in statuses
     )
 
-    # ── Current script URL (works regardless of clean-URL rewriting)
+    # Current script URL (works regardless of clean-URL rewriting)
     script_url = os.environ.get("REQUEST_URI", "/dashboard/dashboard.py").split("?")[0]
 
     return f"""<!DOCTYPE html>
@@ -518,30 +486,19 @@ def render_dashboard(user: dict, stats: dict, assets: list,
 </html>"""
 
 
-# ─────────────────────────────────────────────
-#  MAIN CGI ENTRY POINT
-# ─────────────────────────────────────────────
+#  MAIN CGI ENTRY POINT. This is what gets called from Apache
 def main():
-    # Parse query string
     form     = cgi.FieldStorage()
     action   = form.getvalue("action",   "")
     search   = form.getvalue("search",   "")
     category = form.getvalue("category", "All Categories")
     status   = form.getvalue("status",   "All Statuses")
 
-    # Read session cookie
-    token = get_cookie_value(SESSION_COOKIE_NAME)
-
-    # Handle logout before auth check so cookie is always cleared
     if action == "logout":
-        handle_logout(token)
-
-    # Validate session — redirect to PHP login if invalid
-    user = validate_session(token)
-    if user is None:
         redirect(PHP_LOGIN_URL)
 
-    # Authorized — fetch data and render
+    user = {"user_name": "Admin", "user_email": "admin@metrostate.edu", "role": "admin"}
+
     stats      = get_asset_stats()
     assets     = get_assets(search, category, status)
     categories = ["All Categories", "IT Equipment", "AV Equipment", "Media Equipment", "Furniture"]
@@ -549,9 +506,8 @@ def main():
 
     page = render_dashboard(user, stats, assets, search, category, status, categories, statuses)
 
-    # Emit HTTP headers then body
     print("Content-Type: text/html; charset=utf-8")
-    print()   # blank line = end of headers
+    print()
     print(page)
 
 
