@@ -25,7 +25,6 @@ import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 import html
-import http.cookies
 import mysql.connector
 from mysql.connector import Error
 
