@@ -1,4 +1,4 @@
-#!D:\ics499\htdocs\.venv\Scripts\pythonw.exe
+C:\Users\Nora\AppData\Local\Microsoft\WindowsApps\python.exe
 # =============================================================================
 #  Campus Asset Tracker – Admin Dashboard (CGI Version)
 #  Runs directly under Apache/XAMPP via mod_cgi.

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 27, 2026 at 01:48 AM
+-- Generation Time: Mar 01, 2026 at 09:40 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,8 +45,15 @@ CREATE TABLE `assets` (
   `asset_category` varchar(100) NOT NULL,
   `asset_serial` varchar(50) NOT NULL,
   `asset_location` varchar(100) DEFAULT NULL,
-  `asset_status` enum('Available','Rented','Maintenance') DEFAULT 'Available'
+  `asset_status` enum('available','in-use','maintenance') DEFAULT 'available'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `assets`
+--
+
+INSERT INTO `assets` (`asset_id`, `asset_name`, `asset_category`, `asset_serial`, `asset_location`, `asset_status`) VALUES
+(1, 'Laptop1', 'IT equipment', '1234ABCDE', 'Computer Lab', 'available');
 
 -- --------------------------------------------------------
 
@@ -175,7 +182,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `assets`
 --
 ALTER TABLE `assets`
-  MODIFY `asset_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `asset_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `faculty`
