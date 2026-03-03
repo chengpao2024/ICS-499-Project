@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Campus Asset Tracker - Inventory</title>
+  <link rel="stylesheet" href="/dashboard/static/dashboard.css"/>
+  <style>
+    /* ── Kebab button ───────────────────────────── */
+    .td-kebab { width: 40px; text-align: center; }
+    .btn-kebab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 18px;
+      line-height: 1;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: background .12s, border-color .12s, color .12s;
+    }
+    .btn-kebab:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+      color: #374151;
+    }
+
+    /* ── Floating dropdown (kebab + status) ─────── */
+    .float-dropdown {
+      position: fixed;
+      z-index: 9999;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      padding: 4px;
+      min-width: 150px;
+      font-size: 13px;
+    }
+    .float-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #374151;
+      text-decoration: none;
+      transition: background .1s;
+      white-space: nowrap;
+    }
+    .float-dropdown-item:hover        { background: #f3f4f6; }
+    .float-dropdown-item.active       { background: #eff6ff; color: #2563eb; }
+    .float-dropdown-item.danger       { color: #ef4444; }
+    .float-dropdown-item.danger:hover { background: #fef2f2; }
+    .float-dropdown-item svg          { width: 13px; height: 13px; flex-shrink: 0; }
+    .float-dropdown-divider           { height: 1px; background: #f3f4f6; margin: 3px 8px; }
+
+    /* ── Status badge interaction ───────────────── */
+    .status-cell   { display: inline-block; }
+    .status-toggle { cursor: pointer; user-select: none; }
+    .status-toggle:hover {
+      opacity: 0.85;
+      outline: 2px solid #93c5fd;
+      outline-offset: 2px;
+      border-radius: 20px;
+    }
+    .status-dot-sm {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    /* ── Inline editable cells ──────────────────── */
+    .editable {
+      border-radius: 4px;
+      padding: 1px 3px;
+      transition: background .15s;
+      cursor: text;
+    }
+    .editable:hover { background: #f0f4ff; }
+    .editable-input {
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: inherit;
+      color: inherit;
+      border: 1.5px solid #2563eb;
+      border-radius: 4px;
+      padding: 1px 5px;
+      outline: none;
+      background: #fff;
+      width: 100%;
+      min-width: 80px;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    /* ── Sort button ────────────────────────────── */
+    .btn-sort {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .btn-sort:hover { background: #f3f4f6; border-color: #9ca3af; }
+    .btn-sort svg   { width: 14px; height: 14px; }
+    .btn-sort.active { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+    /* ── Toast ──────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13.5px; font-weight: 500;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 99999;
+    }
+    #toast.show    { opacity: 1; transform: translateY(0); }
+    #toast.success { background: #22c55e; }
+    #toast.error   { background: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ NAVBAR ═══════ -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9
+                   5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">Campus Asset Tracker</span>
+        <span class="brand-sub">IT Management Portal</span>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="%SCRIPT_URL%" class="nav-link active">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247
+                   2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10
+                   11.25h4M3.375 7.5h17.25c.621 0 1.125-.504
+                   1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375
+                   c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+        </svg>
+        Inventory
+      </a>
+      <a href="#" class="nav-link" title="Coming soon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0
+                   012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18
+                   0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021
+                   18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25
+                   2.25 0 0121 11.25v7.5"/>
+        </svg>
+        Rental Management
+      </a>
+    </div>
+
+    <div class="nav-right">
+      <span class="nav-user">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488
+                   0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963
+                   0A8.966 8.966 0 0112 21a8.966 8.966 0
+                   01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        %USER_NAME%
+      </span>
+      <a href="%SCRIPT_URL%?action=logout" class="btn-logout">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0
+                   00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25
+                   0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+        </svg>
+        Logout
+      </a>
+    </div>
+  </nav>
+
+  <!-- ═══════ MAIN CONTENT ═══════ -->
+  <main class="main-content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Asset Inventory</h1>
+        <p class="page-subtitle">Track and manage all campus assets</p>
+      </div>
+      <a href="/public/asset_create.php" class="btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             width="16" height="16" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Add New Asset
+      </a>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Total Assets</p>
+        <div class="stat-value-row">
+          <svg class="stat-icon icon-blue" xmlns="http://www.w3.org/2000/svg"
+               fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9
+                     5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+          </svg>
+          <span class="stat-number">%STATS_TOTAL%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Available</p>
+        <div class="stat-value-row">
+          <span class="status-dot dot-green"></span>
+          <span class="stat-number">%STATS_AVAILABLE%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">In Use</p>
+        <div class="stat-value-row">
+          <span class="status-dot dot-blue"></span>
+          <span class="stat-number">%STATS_IN_USE%</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Under Maintenance</p>
+        <div class="stat-value-row">
+          <span class="status-dot dot-amber"></span>
+          <span class="stat-number">%STATS_MAINTENANCE%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asset Table Panel -->
+    <div class="panel">
+      <h2 class="panel-title">All Assets</h2>
+
+      <form method="GET" action="%SCRIPT_URL%" class="filters-bar" id="filter-form">
+        <!-- Preserve sort state across filter submissions -->
+        <input type="hidden" name="sort_by"  value="%SORT_BY%"/>
+        <input type="hidden" name="sort_dir" value="%SORT_DIR%"/>
+
+        <div class="search-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none"
+               viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0
+                     0010.607 10.607z"/>
+          </svg>
+          <input type="text" name="search" id="search" class="search-input"
+                 placeholder="Search by name, serial number, or location..."
+                 value="%SEARCH_VALUE%" autocomplete="off"/>
+        </div>
+
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+          %CAT_OPTIONS%
+        </select>
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+          %ST_OPTIONS%
+        </select>
+
+        <!-- Sort button — opens a floating sort menu -->
+        <button type="button" id="sort-btn"
+                class="btn-sort %SORT_ACTIVE_CLASS%"
+                title="Sort options">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+               stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 7.5h18M6 12h12M9 16.5h6"/>
+          </svg>
+          Sort
+        </button>
+      </form>
+
+      <div class="table-wrapper">
+        <table class="asset-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Serial Number</th>
+              <th>Status</th>
+              <th>Location</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            %ROWS_HTML%
+          </tbody>
+        </table>
+      </div>
+
+      <p class="row-count">
+        Showing <strong>%ASSET_COUNT%</strong> of <strong>%STATS_TOTAL%</strong> assets
+      </p>
+    </div>
+
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const SCRIPT_URL = "%SCRIPT_URL%";
+    const CURRENT_SORT_BY  = "%SORT_BY%";
+    const CURRENT_SORT_DIR = "%SORT_DIR%";
+  </script>
+  <script src="/dashboard/static/dashboard.js"></script>
+
+</body>
+</html>
