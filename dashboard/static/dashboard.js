@@ -63,7 +63,7 @@ document.addEventListener('click', function(e) {
 });
 window.addEventListener('scroll', closeDropdown, true);
 
-// ── Helper: make a dropdown div ──────────────────────────────────
+// Helper: make a dropdown div
 function makeDropdown() {
   const d = document.createElement('div');
   d.className = 'float-dropdown';
@@ -174,7 +174,7 @@ function openActionMenu(btn) {
 
   const dd = makeDropdown();
 
-  // Edit — navigate to asset_create.php
+  // navigate to asset_create.php
   const editItem = document.createElement('a');
   editItem.className = 'float-dropdown-item';
   editItem.href = editUrl;
@@ -335,3 +335,53 @@ document.addEventListener('dblclick', function(e) {
     if (e.key === 'Escape') { input.removeEventListener('blur', commit); cancel(); }
   });
 });
+
+// ═══════════════════════════════════════════════════════
+//  dashboard.js — ADDITIONS
+//  Append these functions to the existing dashboard.js file.
+// ═══════════════════════════════════════════════════════
+
+// ── Admin: Approve a rental request ─────────────────────
+function approveRequest(requestId) {
+  if (!confirm('Approve rental request #' + requestId + '?\n' +
+               'This will mark the asset as Rented and create a rental record.')) {
+    return;
+  }
+  const params = new URLSearchParams({ action: 'approve_request', id: requestId });
+  fetch(SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString(),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Request #' + requestId + ' approved');
+      setTimeout(() => window.location.reload(), 900);
+    } else {
+      showToast('Approve failed: ' + (data.error || 'unknown'), 'error');
+    }
+  })
+  .catch(() => showToast('Network error.', 'error'));
+}
+
+// ── Admin: Deny a rental request ────────────────────────
+function denyRequest(requestId) {
+  if (!confirm('Deny rental request #' + requestId + '?')) return;
+  const params = new URLSearchParams({ action: 'deny_request', id: requestId });
+  fetch(SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString(),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Request #' + requestId + ' denied');
+      setTimeout(() => window.location.reload(), 900);
+    } else {
+      showToast('Deny failed: ' + (data.error || 'unknown'), 'error');
+    }
+  })
+  .catch(() => showToast('Network error.', 'error'));
+}

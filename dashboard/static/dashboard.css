@@ -523,3 +523,72 @@ a { text-decoration: none; color: inherit; }
 #toast.show    { opacity: 1; transform: translateY(0); }
 #toast.success { background: #22c55e; }
 #toast.error   { background: #ef4444; }
+
+/* ═══════════════════════════════════════════════════════
+   dashboard.css — ADDITIONS
+   Append these rules to the existing dashboard.css file.
+   Do not replace the existing file.
+════════════════════════════════════════════════════════ */
+
+/* ── Role badges (navbar) ─────────────────────────────── */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.role-admin   { background: #fee2e2; color: #dc2626; }
+.role-faculty { background: #dbeafe; color: #1d4ed8; }
+.role-student { background: #dcfce7; color: #15803d; }
+
+/* ── Rented status badge ──────────────────────────────── */
+.badge-rented { background: #ede9fe; color: #6d28d9; }
+
+/* ── Approve / Deny action buttons ───────────────────── */
+.btn-approve {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s;
+  margin-right: 4px;
+}
+.btn-approve:hover { background: #bbf7d0; }
+
+.btn-deny {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s;
+}
+.btn-deny:hover { background: #fecaca; }
+
+/* ── Requester role hint (rental table) ──────────────── */
+.role-hint {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 11.5px;
+}
+
+/* ── Rental action column ─────────────────────────────── */
+.td-actions {
+  white-space: nowrap;
+}

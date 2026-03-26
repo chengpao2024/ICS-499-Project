@@ -74,3 +74,20 @@ DEFAULT_STATUSES = [
     "in-use",
     "maintenance",
 ]
+
+# Rental request filter options shown to admin
+RENTAL_REQUEST_FILTERS = ["Pending", "Approved", "Denied", "All"]
+
+# -------------------------
+# Session
+# -------------------------
+SESSION_COOKIE_NAME = "cat_session_token"
+PHP_SESSION_PATH    = "D:/ics499/tmp"
+PHPSESSID_COOKIE    = "PHPSESSID"
+
+# -------------------------
+# Roles
+# -------------------------
+ROLES       = ["admin", "faculty", "student"]
+ADMIN_ROLES = ["admin"]
+USER_ROLES  = ["faculty", "student"]
