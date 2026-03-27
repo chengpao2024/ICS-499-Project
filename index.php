@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($_SESSION['role'] === "admin") {
             header("Location: /dashboard/dashboard.py");
         } else {
-            header("Location: home.php");
+            header("Location: /dashboard/dashboard.py");
         }
         exit();
 
