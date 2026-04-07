@@ -1,0 +1,36 @@
+INSERT INTO students (
+    student_email,
+    student_password,
+    student_cell,
+    student_fname,
+    student_lname
+) VALUES (
+    'student1@gmail.com',
+    '$2y$10$OQn5xKHtIVJtjcoRWWkpxOzl0I1n5.Z4mb/Q.q.C2g4rfHkE2KBmO',
+    '651-555-1234',
+    'Jane',
+    'Doe'
+);
+
+INSERT INTO admins (admin_username, admin_password)
+VALUES ('admin1', '$2y$10$T/XIpEGhsh4Ceiq3W8aLWOo1wN2/soLGWfy4iqRgmgfS02N8Q2zgy');
+
+INSERT INTO faculty (
+    faculty_email,
+    faculty_password,
+    faculty_fname,
+    faculty_lname,
+    department
+) VALUES (
+    'teacher1@gmail.com',
+    '$2y$10$tvBGAPZE2ADtcezd93LAfecDdxOcyF1o2eVr5srVDBvRFHphvEDti',
+    'John',
+    'Smith',
+    'Computer Science'
+);
+
+
+//username/password
+//admin admin
+//student1@gmail.com student
+//teacher1@gmail.com teacher

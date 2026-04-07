@@ -101,39 +101,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 <body>
 
-<div class="split-container" style="display:flex; height:100vh; width:100%;">
+<div class="split-container">
 
-    <div class="left-panel" style="flex:1; overflow:hidden;">
-        <img src="test.jpg" alt="Campus Asset Tracker" style="width:100%; height:100%; object-fit:cover;">
-        <div class="acronym-overlay">
-            <div class="acronym-line"><span class="acronym-letter">C</span><span class="acronym-word">ampus</span></div>
-            <div class="acronym-line"><span class="acronym-letter">A</span><span class="acronym-word">sset</span></div>
-            <div class="acronym-line"><span class="acronym-letter">T</span><span class="acronym-word">racker</span></div>
-        </div>
-    </div>
+    <div class="left-panel"></div>
 
-    <div class="right-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
+    <div class="right-panel">
 
+        <!-- KEEP YOUR ORIGINAL LOGIN BOX -->
         <div class="login-container">
             <h2>Campus Asset Tracker (CAT)</h2>
             <h3>Login</h3>
 
-            <?php if ($error): ?>
-                <p class="error"><?= htmlspecialchars($error) ?></p>
-            <?php endif; ?>
+            <?php if ($error != "") { ?>
+                <p class="error"><?php echo $error; ?></p>
+            <?php } ?>
 
             <form method="POST" action="">
-                <input type="text"     name="username" placeholder="Username or Email" required>
-                <input type="password" name="password" placeholder="Password"          required>
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
                 <button type="submit">Login</button>
             </form>
-
-            <!-- Test credentials (remove before production) -->
-            <p style="font-size:11px; color:#999; margin-top:16px;">
-                Admin: admin1 &nbsp;|&nbsp;
-                Faculty: teacher1@gmail.com &nbsp;|&nbsp;
-                Student: student1@gmail.com
-            </p>
         </div>
 
     </div>
