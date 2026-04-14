@@ -43,9 +43,7 @@ except Exception:
     _fatal("=== IMPORT ERROR ===\n\n" + traceback.format_exc())
 
 
-# ─────────────────────────────────────────────
 #  HTTP UTILITIES
-# ─────────────────────────────────────────────
 def redirect(url: str):
     print(f"Status: 302 Found\nLocation: {url}\n")
     sys.exit(0)
@@ -56,14 +54,36 @@ def json_response(data: dict):
     print(json.dumps(data))
     sys.exit(0)
 
+def get_validated_user() -> dict | None:
+    """
+    Resolve and validate the current user.
+    Returns None if session is missing, expired, or malformed.
+    """
+    user = SessionResolver.get_current_user()
+
+    # Must exist
+    if not user:
+        return None
+
+    # Must have a valid role
+    if user.get("role") not in config.ROLES:
+        return None
+
+    # Must have a real user_id (not 0 or missing)
+    if not user.get("user_id"):
+        return None
+
+    # Must have an identifier to trace back to a DB record
+    if not user.get("username"):
+        return None
+
+    return user
 
 def is_admin(user) -> bool:
     return user is not None and user.get("role") in config.ADMIN_ROLES
 
 
-# ─────────────────────────────────────────────
 #  TEMPLATE RENDERING
-# ─────────────────────────────────────────────
 def _load_template(name: str) -> str:
     path = os.path.join(os.path.dirname(__file__), "templates", name)
     with open(path, encoding="utf-8") as fh:
@@ -174,9 +194,7 @@ def render_user(user, form, script_url: str) -> str:
     })
 
 
-# ─────────────────────────────────────────────
-#  MAIN — CGI ROUTER
-# ─────────────────────────────────────────────
+# MAIN - CGI ROUTER
 def main():
     form       = cgi.FieldStorage()
     method     = os.environ.get("REQUEST_METHOD", "GET").upper()
@@ -184,6 +202,8 @@ def main():
     script_url = os.environ.get("REQUEST_URI", "/dashboard/dashboard.py").split("?")[0]
 
     if action == "logout":
+        # Clear session cookie on logout
+        print("Set-Cookie: PHPSESSID=deleted; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
         redirect(config.PHP_LOGIN_URL)
 
     user = SessionResolver.get_current_user()

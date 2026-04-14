@@ -1,7 +1,7 @@
 // Campus Asset Tracker — Dashboard JS
 // SCRIPT_URL / CURRENT_SORT_BY / CURRENT_SORT_DIR are set by inline <script> in the template.
 
-// ── Search debounce ──────────────────────────────────────────────
+// Search debounce
 const searchInput = document.getElementById('search');
 let debounceTimer;
 searchInput.addEventListener('input', () => {
@@ -13,7 +13,7 @@ function submitForm() {
   document.getElementById('filter-form').submit();
 }
 
-// ── Toast ────────────────────────────────────────────────────────
+// Notification toast
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -21,10 +21,8 @@ function showToast(msg, type = 'success') {
   setTimeout(() => { t.className = ''; }, 2800);
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  FLOATING DROPDOWN MANAGER
 //  One dropdown open at a time. Shared by status, kebab, sort.
-// ═══════════════════════════════════════════════════════════════
 let activeDropdown = null;
 
 function closeDropdown() {
@@ -97,29 +95,30 @@ function makeDivider() {
   return d;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  STATUS DROPDOWN
-// ═══════════════════════════════════════════════════════════════
+// STATUS DROPDOWN
 const DOT_COLORS = {
   'available':   '#22c55e',
   'in-use':      '#3b82f6',
-  'maintenance': '#f59e0b'
+  'maintenance': '#f59e0b',
+  'reserved':    '#d97706',
 };
 const STATUS_LABELS = {
   'available':   'Available',
   'in-use':      'In Use',
-  'maintenance': 'Maintenance'
+  'maintenance': 'Maintenance',
+  'reserved':    'Reserved'
 };
 const BADGE_CLASSES = {
   'available':   'badge-available',
   'in-use':      'badge-inuse',
-  'maintenance': 'badge-maintenance'
+  'maintenance': 'badge-maintenance',
+  'reserved':    'badge-reserved',
 };
 
 function openStatusDropdown(badge, assetId, currentStatus) {
   const dd = makeDropdown();
 
-  ['available', 'in-use', 'maintenance'].forEach(s => {
+  ['available', 'in-use', 'maintenance', 'reserved'].forEach(s => {
     const item = document.createElement('div');
     item.className = 'float-dropdown-item' + (s === currentStatus ? ' active' : '');
 
@@ -164,9 +163,8 @@ function updateStatus(assetId, newStatus, badge) {
   .catch(() => showToast('Network error.', 'error'));
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  KEBAB (ACTION) MENU
-// ═══════════════════════════════════════════════════════════════
+
+// KEBAB (ACTION) MENU
 function openActionMenu(btn) {
   const assetId = btn.dataset.id;
   const name    = btn.dataset.name;
@@ -207,9 +205,7 @@ function openActionMenu(btn) {
   openDropdown(dd, btn);
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  SORT DROPDOWN
-// ═══════════════════════════════════════════════════════════════
 function openSortDropdown(btn) {
   const dd = makeDropdown();
 
@@ -243,11 +239,10 @@ function applySort(by, dir) {
   form.submit();
 }
 
-// ═══════════════════════════════════════════════════════════════
+
 //  DELEGATED CLICK HANDLER
 //  All button interactions handled here
 //  fires before the "close dropdown" listener above.
-// ═══════════════════════════════════════════════════════════════
 document.addEventListener('click', function(e) {
   // Status badge
   if (e.target.classList.contains('status-toggle')) {
@@ -271,9 +266,8 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ═══════════════════════════════════════════════════════════════
+
 //  INLINE EDIT (Function: double-click on editable cells: name, category, location)
-// ═══════════════════════════════════════════════════════════════
 document.addEventListener('dblclick', function(e) {
   const span = e.target.closest('.editable');
   if (!span || span.querySelector('input')) return; // already editing
@@ -341,7 +335,7 @@ document.addEventListener('dblclick', function(e) {
 //  Append these functions to the existing dashboard.js file.
 // ═══════════════════════════════════════════════════════
 
-// ── Admin: Approve a rental request ─────────────────────
+// Admin: Approve a rental request 
 function approveRequest(requestId) {
   if (!confirm('Approve rental request #' + requestId + '?\n' +
                'This will mark the asset as Rented and create a rental record.')) {
@@ -365,7 +359,7 @@ function approveRequest(requestId) {
   .catch(() => showToast('Network error.', 'error'));
 }
 
-// ── Admin: Deny a rental request ────────────────────────
+// Admin: Deny a rental request
 function denyRequest(requestId) {
   if (!confirm('Deny rental request #' + requestId + '?')) return;
   const params = new URLSearchParams({ action: 'deny_request', id: requestId });

@@ -115,7 +115,10 @@ class SessionResolver:
                 "department":   details.get("department", ""),
             }
         except Error:
-            # DB unavailable — return minimal dict so page can render
+            # DB unavailable — cant verify user
+            return None
+        
+            # This was for the bypass to render the page
             return {
                 "user_id": 0, "username": identifier,
                 "display_name": identifier, "email": "",
@@ -171,7 +174,7 @@ class SessionResolver:
                     return dict(row)
 
         except Error:
-            pass
+            return None
         return defaults
 
     @staticmethod
@@ -222,7 +225,7 @@ class SessionResolver:
                     return dict(row)
 
         except Error:
-            pass
+            return None
         return defaults
 
     # ── Session path resolver ─────────────────────────

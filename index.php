@@ -1,5 +1,10 @@
 <?php
 session_start();
+// If already logged in with a valid session, go straight to dashboard
+if (isset($_SESSION['user'], $_SESSION['role'], $_SESSION['user_id'])) {
+    header("Location: /dashboard/dashboard.py");
+    exit();
+}
 
 require_once __DIR__ . '/config/db.php';
 

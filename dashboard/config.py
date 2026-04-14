@@ -29,12 +29,14 @@ STATUS_LABELS = {
     "available": "Available",
     "in-use": "In Use",
     "maintenance": "Maintenance",
+    "reserved": "Reserved",
 }
 
 STATUS_CLASSES = {
     "available": "badge-available",
     "in-use": "badge-inuse",
     "maintenance": "badge-maintenance",
+    "reserved": "badge-reserved",
 }
 
 

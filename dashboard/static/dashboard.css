@@ -592,3 +592,8 @@ a { text-decoration: none; color: inherit; }
 .td-actions {
   white-space: nowrap;
 }
+
+.badge-reserved {
+  background: #fef3c7;
+  color: #b45309;
+}
