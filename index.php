@@ -22,9 +22,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Redirect based on role
         if ($_SESSION['role'] === "admin") {
-            header("Location: /dashboard/dashboard.py");
+            header("Location: dashboard/dashboard.py");
         } else {
-            header("Location: /dashboard/dashboard.py");
+            header("Location: dashboard/dashboard.py");
         }
         exit();
 
@@ -42,19 +42,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
 
-<div class="login-container">
-    <h2>Campus Asset Tracker (CAT)</h2>
-    <h3>Login</h3>
+<div class="split-container">
 
-    <?php if ($error != "") { ?>
-        <p class="error"><?php echo $error; ?></p>
-    <?php } ?>
+    <div class="left-panel"></div>
 
-    <form method="POST" action="">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+    <div class="right-panel">
+
+        <!-- KEEP YOUR ORIGINAL LOGIN BOX -->
+        <div class="login-container">
+            <h2>Campus Asset Tracker (CAT)</h2>
+            <h3>Login</h3>
+
+            <?php if ($error != "") { ?>
+                <p class="error"><?php echo $error; ?></p>
+            <?php } ?>
+
+            <form method="POST" action="">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+    </div>
 
 </div>
 

@@ -54,15 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $form['rent_end']
             );
             if ($stmt->execute()) {
-                $success = 'Rental request submitted successfully.';
-                // Reset form
-                $form = [
-                    'asset_id' => '',
-                    'asset_category' => '',
-                    'user_name' => '',
-                    'rent_start' => '',
-                    'rent_end' => '',
-                ];
+                $success = 'Rental request submitted successfully. Redirecting to dashboard...';
             } else {
                 $error = 'Database error: ' . $stmt->error;
             }
@@ -97,7 +89,17 @@ button { margin-top:14px; padding:12px 14px; border:0; border-radius:10px; backg
 <div class="container">
   <div class="card">
     <?php if ($error): ?><div class="msg err"><?= htmlspecialchars($error) ?></div><?php endif; ?>
-    <?php if ($success): ?><div class="msg ok"><?= htmlspecialchars($success) ?></div><?php endif; ?>
+    
+    //Redirects to dashboard after successful rental request.
+    <?php if ($success): ?>
+        <div class="msg ok"><?= htmlspecialchars($success) ?></div>
+
+        <script>
+            setTimeout(function() {
+                window.location.href = "../dashboard/dashboard.py";
+            }, 2000); // 2 seconds
+        </script>
+    <?php endif; ?>
 
     <form method="post" novalidate>
         <label>Asset Name *</label>
