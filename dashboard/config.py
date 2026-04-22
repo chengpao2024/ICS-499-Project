@@ -6,6 +6,7 @@
 # Auth / Redirects
 # -------------------------
 PHP_LOGIN_URL = "http://localhost/index.php"
+PHP_LOGOUT_URL = "http://localhost/logout.php"
 
 
 # -------------------------

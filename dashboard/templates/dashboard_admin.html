@@ -5,129 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Campus Asset Tracker — Admin</title>
   <link rel="stylesheet" href="/dashboard/static/dashboard.css"/>
-  <style>
-    /* ── Kebab / Float dropdown / Status (unchanged) ── */
-    .td-kebab { width: 40px; text-align: center; }
-    .btn-kebab {
-      display:inline-flex; align-items:center; justify-content:center;
-      width:28px; height:28px; background:transparent;
-      border:1px solid transparent; border-radius:6px;
-      font-size:18px; line-height:1; color:#9ca3af; cursor:pointer;
-      transition:background .12s,border-color .12s,color .12s;
-    }
-    .btn-kebab:hover { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
-    .float-dropdown {
-      position:fixed; z-index:9999; background:#fff;
-      border:1px solid #e5e7eb; border-radius:10px;
-      box-shadow:0 8px 24px rgba(0,0,0,.12); padding:4px;
-      min-width:150px; font-size:13px;
-    }
-    .float-dropdown-item {
-      display:flex; align-items:center; gap:9px; padding:8px 12px;
-      border-radius:7px; cursor:pointer; font-weight:500; color:#374151;
-      text-decoration:none; transition:background .1s; white-space:nowrap;
-    }
-    .float-dropdown-item:hover        { background:#f3f4f6; }
-    .float-dropdown-item.active       { background:#eff6ff; color:#2563eb; }
-    .float-dropdown-item.danger       { color:#ef4444; }
-    .float-dropdown-item.danger:hover { background:#fef2f2; }
-    .float-dropdown-item svg          { width:13px; height:13px; flex-shrink:0; }
-    .float-dropdown-divider           { height:1px; background:#f3f4f6; margin:3px 8px; }
-    .status-cell   { display:inline-block; }
-    .status-toggle { cursor:pointer; user-select:none; }
-    .status-toggle:hover { opacity:.85; outline:2px solid #93c5fd; outline-offset:2px; border-radius:20px; }
-    .status-dot-sm { width:9px; height:9px; border-radius:50%; flex-shrink:0; display:inline-block; }
-    .editable { border-radius:4px; padding:1px 3px; transition:background .15s; cursor:text; }
-    .editable:hover { background:#f0f4ff; }
-    .editable-input {
-      font-size:inherit; font-family:inherit; font-weight:inherit; color:inherit;
-      border:1.5px solid #2563eb; border-radius:4px; padding:1px 5px; outline:none;
-      background:#fff; width:100%; min-width:80px;
-      box-shadow:0 0 0 3px rgba(37,99,235,.12);
-    }
-    .btn-sort {
-      display:inline-flex; align-items:center; gap:6px; padding:8px 12px;
-      background:#fff; border:1px solid #d1d5db; border-radius:8px;
-      font-size:13px; color:#374151; font-weight:500; cursor:pointer;
-      transition:background .12s,border-color .12s; white-space:nowrap;
-    }
-    .btn-sort:hover { background:#f3f4f6; border-color:#9ca3af; }
-    .btn-sort svg   { width:14px; height:14px; }
-    .btn-sort.active { border-color:#2563eb; color:#2563eb; background:#eff6ff; }
-
-    /* ── View tab nav ── */
-    .view-tabs {
-      display:flex; gap:4px; margin-bottom:1.5rem;
-      border-bottom:2px solid #e5e7eb; padding-bottom:0;
-    }
-    .view-tab {
-      display:flex; align-items:center; gap:7px;
-      padding:9px 18px; border-radius:8px 8px 0 0;
-      font-size:13.5px; font-weight:500; color:#6b7280;
-      text-decoration:none; transition:color .15s,background .15s;
-      position:relative; top:2px;
-      border:1px solid transparent; border-bottom:none;
-    }
-    .view-tab:hover { color:#374151; background:#f9fafb; }
-    .view-tab.active {
-      color:#2563eb; background:#fff;
-      border-color:#e5e7eb; border-bottom-color:#fff;
-    }
-    .view-tab svg { width:15px; height:15px; }
-    .tab-badge {
-      display:inline-flex; align-items:center; justify-content:center;
-      min-width:18px; height:18px; padding:0 5px;
-      background:#ef4444; color:#fff;
-      border-radius:9px; font-size:11px; font-weight:700;
-    }
-
-    /* ── Rental section styles ── */
-    .rental-stats-grid {
-      display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;
-      margin-bottom:1.5rem;
-    }
-    .req-filter-bar {
-      display:flex; gap:6px; margin-bottom:1rem; flex-wrap:wrap;
-    }
-    .btn-filter-tab {
-      padding:6px 14px; border:1px solid #d1d5db; border-radius:20px;
-      background:#fff; font-size:12.5px; font-weight:500; color:#6b7280;
-      cursor:pointer; transition:all .15s; text-decoration:none;
-    }
-    .btn-filter-tab:hover { background:#f3f4f6; }
-    .btn-filter-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
-
-    /* Approve / Deny buttons */
-    .btn-approve {
-      padding:5px 10px; background:#dcfce7; color:#15803d;
-      border:1px solid #86efac; border-radius:6px;
-      font-size:12px; font-weight:600; cursor:pointer;
-      transition:background .12s; margin-right:4px;
-    }
-    .btn-approve:hover { background:#bbf7d0; }
-    .btn-deny {
-      padding:5px 10px; background:#fee2e2; color:#dc2626;
-      border:1px solid #fca5a5; border-radius:6px;
-      font-size:12px; font-weight:600; cursor:pointer;
-      transition:background .12s;
-    }
-    .btn-deny:hover { background:#fecaca; }
-    .role-hint { color:#9ca3af; font-weight:400; font-size:11.5px; }
-
-    /* rented badge */
-    .badge-rented { background:#ede9fe; color:#6d28d9; }
-
-    /* Toast */
-    #toast {
-      position:fixed; bottom:24px; right:24px; padding:10px 18px;
-      border-radius:8px; font-size:13.5px; font-weight:500; color:#fff;
-      opacity:0; transform:translateY(8px);
-      transition:opacity .25s,transform .25s; pointer-events:none; z-index:99999;
-    }
-    #toast.show    { opacity:1; transform:translateY(0); }
-    #toast.success { background:#22c55e; }
-    #toast.error   { background:#ef4444; }
-  </style>
+  <link rel="stylesheet" href="/dashboard/static/dashboard_admin.css"/>
 </head>
 <body>
 
@@ -161,6 +39,24 @@
         %USER_NAME%
         <span class="role-badge role-admin">Admin</span>
       </span>
+
+      <!--Manage Users button-->
+      <a href="/public/manage_users.php" class="btn-manage-users">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0
+                  004.121-.952 4.125 4.125 0 00-7.533-2.493M15
+                  19.128v-.003c0-1.113-.285-2.16-.786-3.07M15
+                  19.128v.106A12.318 12.318 0 018.624 21c-2.331
+                  0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375
+                  0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75
+                  0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625
+                  0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+        </svg>
+        Manage Users
+      </a>
+
       <a href="%SCRIPT_URL%?action=logout" class="btn-logout">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
              stroke-width="1.8" stroke="currentColor">
@@ -182,7 +78,7 @@
         <h1 class="page-title">Asset Inventory</h1>
         <p class="page-subtitle">Manage all campus assets and rental requests</p>
       </div>
-      <a href="../public/asset_create.php" class="btn-primary">
+      <a href="/public/asset_create.php" class="btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
              width="16" height="16" stroke-width="2" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
@@ -193,6 +89,8 @@
 
     <!-- ── View Tabs ── -->
     <div class="view-tabs">
+
+      <!-- Inventory -->
       <a href="%SCRIPT_URL%?view=inventory" class="view-tab %INV_ACTIVE%">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
              stroke-width="1.8" stroke="currentColor">
@@ -206,6 +104,8 @@
         </svg>
         Inventory
       </a>
+
+      <!-- Rental Management -->
       <a href="%SCRIPT_URL%?view=rentals" class="view-tab %RENT_ACTIVE%">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
              stroke-width="1.8" stroke="currentColor">
@@ -217,17 +117,37 @@
                    11.25v7.5"/>
         </svg>
         Rental Management
-        <!-- Show badge if there are pending requests -->
         <span class="tab-badge" id="pending-badge">%PENDING_REQUESTS%</span>
       </a>
+
+      <!-- Summary (new) -->
+      <a href="%SCRIPT_URL%?view=summary" class="view-tab %SUMM_ACTIVE%">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+             stroke-width="1.8" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0
+                   002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424
+                   48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664
+                   0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25
+                   0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012
+                   0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08
+                   C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875
+                   c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125
+                   1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375
+                   c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008
+                   H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/>
+        </svg>
+        Summary
+      </a>
+
     </div>
+
 
     <!-- ══════════════════════════════════════════
          INVENTORY VIEW
     ══════════════════════════════════════════════ -->
     <div id="inventory-section" %INV_HIDDEN%>
 
-      <!-- Stat Cards -->
       <div class="stats-grid">
         <div class="stat-card">
           <p class="stat-label">Total Assets</p>
@@ -241,7 +161,6 @@
             <span class="stat-number">%STATS_TOTAL%</span>
           </div>
         </div>
-
         <div class="stat-card">
           <p class="stat-label">Available</p>
           <div class="stat-value-row">
@@ -249,7 +168,6 @@
             <span class="stat-number">%STATS_AVAILABLE%</span>
           </div>
         </div>
-
         <div class="stat-card">
           <p class="stat-label">In Use</p>
           <div class="stat-value-row">
@@ -257,7 +175,6 @@
             <span class="stat-number">%STATS_IN_USE%</span>
           </div>
         </div>
-
         <div class="stat-card">
           <p class="stat-label">Maintenance</p>
           <div class="stat-value-row">
@@ -267,7 +184,6 @@
         </div>
       </div>
 
-      <!-- Asset Table Panel -->
       <div class="panel">
         <h2 class="panel-title">All Assets</h2>
 
@@ -329,7 +245,6 @@
     ══════════════════════════════════════════════ -->
     <div id="rental-section" %RENT_HIDDEN%>
 
-      <!-- Rental stat cards -->
       <div class="rental-stats-grid">
         <div class="stat-card">
           <p class="stat-label">Pending Requests</p>
@@ -354,11 +269,9 @@
         </div>
       </div>
 
-      <!-- Rental Requests Panel -->
       <div class="panel" style="margin-bottom:1.5rem;">
         <h2 class="panel-title">Rental Requests</h2>
 
-        <!-- Filter tabs -->
         <div class="req-filter-bar">
           <a href="%SCRIPT_URL%?view=rentals&req_filter=Pending"
              class="btn-filter-tab %RF_PENDING_ACTIVE%">Pending</a>
@@ -383,7 +296,6 @@
         </div>
       </div>
 
-      <!-- Active Rentals Panel -->
       <div class="panel">
         <h2 class="panel-title">Active Rentals</h2>
         <div class="table-wrapper">
@@ -391,7 +303,7 @@
             <thead>
               <tr>
                 <th>Rental #</th><th>Asset</th><th>Rented By</th>
-                <th>Start</th><th>Due</th><th>Status</th>
+                <th>Start</th><th>Due</th><th>Status</th><th>Action</th>
               </tr>
             </thead>
             <tbody>%ACTIVE_RENTAL_ROWS%</tbody>
@@ -400,6 +312,15 @@
       </div>
 
     </div><!-- /rental-section -->
+
+
+    <!-- ══════════════════════════════════════════
+         SUMMARY VIEW  (admin-only report)
+    ══════════════════════════════════════════════ -->
+    <div id="summary-section" %SUMM_HIDDEN%>
+      %SUMMARY_HTML%
+    </div><!-- /summary-section -->
+
 
   </main>
 
