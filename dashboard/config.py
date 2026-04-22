@@ -82,7 +82,7 @@ RENTAL_REQUEST_FILTERS = ["Pending", "Approved", "Denied", "All"]
 # Session
 # -------------------------
 SESSION_COOKIE_NAME = "cat_session_token"
-PHP_SESSION_PATH    = "D:/ics499/tmp"
+PHP_SESSION_PATH    = "D:/ics499/tmp" # Update this to match your xampp's tmp file path
 PHPSESSID_COOKIE    = "PHPSESSID"
 
 # -------------------------
