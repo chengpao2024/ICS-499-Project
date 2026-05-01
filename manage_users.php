@@ -44,7 +44,9 @@ $faculty = $conn->query("SELECT * FROM faculty");
 <body>
 
 <h1>Manage Users</h1>
-
+<form action="create_user.php" method="get" style="margin-bottom: 20px;">
+    <button type="submit">+ Create User</button>
+</form>
 <h2>Students</h2>
 <table class="user-table">
     <tr>
