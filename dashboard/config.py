@@ -13,7 +13,7 @@ PHP_LOGOUT_URL = "http://localhost/logout.php"
 # Database
 # -------------------------
 DB_CONFIG = {
-    "host": "localhost",
+    "host": "127.0.0.1",
     "user": "root",
     "password": "",
     "database": "cat_db",

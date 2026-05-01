@@ -362,11 +362,9 @@
         submitBtn.textContent = 'Submit Request';
       });
     }
-
-    // Return rental
+    // ── Return a rental (faculty / student) ──
     function returnRental(rentalId) {
       if (!confirm('Confirm return of rental #' + rentalId + '?\nThe item will be marked as available.')) return;
-
       const params = new URLSearchParams({ action: 'return_rental', id: rentalId });
       fetch(SCRIPT_URL, {
         method:  'POST',
@@ -377,27 +375,12 @@
       .then(data => {
         if (data.success) {
           showToast('Item returned successfully.');
-          // Update the row in place — swap button for Returned badge
-          const row = document.getElementById('rental-row-' + rentalId);
-          if (row) {
-            const actionCell = row.querySelector('.td-actions');
-            if (actionCell) {
-              actionCell.innerHTML = '<span class="status-badge badge-available">Returned</span>';
-            }
-            // Update the status badge cell (second to last td)
-            const cells = row.querySelectorAll('td');
-            const statusCell = cells[cells.length - 2];
-            if (statusCell) {
-              statusCell.innerHTML = '<span class="status-badge badge-available">Returned</span>';
-            }
-          }
-          // Refresh after short delay so stat cards update
-          setTimeout(() => window.location.reload(), 1500);
+          setTimeout(() => window.location.reload(), 1000);
         } else {
           showToast('Return failed: ' + (data.error || 'unknown'), 'error');
         }
       })
-      .catch(() => showToast('Network error.', 'error'));
+      .catch(() => showToast('Network error — please try again.', 'error'));
     }
   </script>
 </body>

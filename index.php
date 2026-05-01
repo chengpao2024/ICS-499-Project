@@ -106,6 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 <body>
 
+<<<<<<< HEAD
 <div class="split-container" style="display:flex; height:100vh; width:100%;">
 
     <div class="left-panel" style="flex:1; overflow:hidden;">
@@ -119,10 +120,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <div class="right-panel" style="flex:1; display:flex; align-items:center; justify-content:center;">
 
+=======
+<div class="split-container">
+
+    <div class="left-panel"></div>
+
+    <div class="right-panel">
+
+        <!-- KEEP YOUR ORIGINAL LOGIN BOX -->
+>>>>>>> 96ef5047031cb8c5be8922d398e2351e732aa040
         <div class="login-container">
             <h2>Campus Asset Tracker (CAT)</h2>
             <h3>Login</h3>
 
+<<<<<<< HEAD
             <?php if ($error): ?>
                 <p class="error"><?= htmlspecialchars($error) ?></p>
             <?php endif; ?>
@@ -139,6 +150,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 Faculty: teacher1@gmail.com &nbsp;|&nbsp;
                 Student: student1@gmail.com
             </p>
+=======
+            <?php if ($error != "") { ?>
+                <p class="error"><?php echo $error; ?></p>
+            <?php } ?>
+
+            <form method="POST" action="">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+>>>>>>> 96ef5047031cb8c5be8922d398e2351e732aa040
         </div>
 
     </div>

@@ -379,3 +379,25 @@ function denyRequest(requestId) {
   })
   .catch(() => showToast('Network error.', 'error'));
 }
+
+// Return a rental
+function returnRental(rentalId) {
+  if (!confirm('Confirm return of rental #' + rentalId + '?\nThe item will be marked as available.')) return;
+
+  const params = new URLSearchParams({ action: 'return_rental', id: rentalId });
+  fetch(SCRIPT_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body:    params.toString(),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('Item returned successfully.');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast('Return failed: ' + (data.error || 'unknown'), 'error');
+    }
+  })
+  .catch(() => showToast('Network error.', 'error'));
+}

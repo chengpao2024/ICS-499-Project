@@ -28,6 +28,8 @@ from models.asset       import Asset
 from models.rental      import Rental
 from views.html_builder import HtmlBuilder
 
+import warnings
+warnings.filterwarnings("ignore")
 
 #  HTTP UTILITIES
 def redirect(url: str):
@@ -36,9 +38,21 @@ def redirect(url: str):
 
 
 def json_response(data: dict):
-    print("Content-Type: application/json; charset=utf-8\n")
-    print(json.dumps(data))
+    body = json.dumps(data).encode("utf-8")
+    try:
+        sys.stdout.flush()
+    except:
+        pass
+    sys.stdout.buffer.write(b"Content-Type: application/json; charset=utf-8\r\n\r\n")
+    sys.stdout.buffer.write(body)
+    sys.stdout.buffer.flush()
     sys.exit(0)
+
+def safe_json(fn):
+    try:
+        fn()
+    except Exception as exc:
+        json_response({"success": False, "error": str(exc)})
 
 
 def is_admin(user) -> bool:
@@ -279,9 +293,11 @@ def main():
         due_date   = form.getvalue("due_date",  "").strip()
         if not asset_id.isdigit() or not start_date or not due_date:
             json_response({"success": False, "error": "Missing required fields"})
-        ok, result = Rental.create_request(user, int(asset_id), start_date, due_date)
-        json_response({"success": True, "request_id": result} if ok
-                      else {"success": False, "error": result})
+        def _do():
+            ok, result = Rental.create_request(user, int(asset_id), start_date, due_date)
+            json_response({"success": True, "request_id": result} if ok
+                        else {"success": False, "error": result})
+        safe_json(_do)
 
 
     # return_rental — available to all authenticated users
@@ -290,10 +306,12 @@ def main():
         rental_id = form.getvalue("id", "")
         if not rental_id.isdigit():
             json_response({"success": False, "error": "Invalid rental ID"})
-        acting_user = None if is_admin(user) else user
-        ok, error = Rental.return_rental(int(rental_id), acting_user)
-        json_response({"success": True} if ok
-                      else {"success": False, "error": error})
+        def _do():
+            acting_user = None if is_admin(user) else user
+            ok, error = Rental.return_rental(int(rental_id), acting_user)
+            json_response({"success": True} if ok
+                        else {"success": False, "error": error})
+        safe_json(_do)
 
     # Page renders
     page = render_admin(user, form, script_url) if is_admin(user) \
@@ -304,5 +322,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("Content-Type: text/html; charset=utf-8\n")
     main()

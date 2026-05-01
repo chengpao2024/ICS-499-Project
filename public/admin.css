@@ -81,3 +81,18 @@ h2 {
 .add-btn:hover {
     background-color: #0056b3;
 }
+
+.create-btn {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.create-btn:hover {
+    background-color: #218838;
+}
