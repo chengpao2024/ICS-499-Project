@@ -249,6 +249,12 @@
   overflow-x: auto; white-space: pre;
 }
 
+/* Fix: constrain empty-state icon size inside summary panels */
+.summ-panel .no-results svg,
+.panel .no-results svg {
+  width: 24px; height: 24px;
+}
+
 /* Print */
 @media print {
   .navbar, .view-tabs, .filters-bar, .btn-print,

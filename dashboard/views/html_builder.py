@@ -186,7 +186,7 @@ class HtmlBuilder:
         <tr>
           <td colspan="{colspan}" class="no-results">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                 stroke-width="1.4" stroke="currentColor">
+                 width="24" height="24" stroke-width="1.4" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round"
                     d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5
                        7.5 0 0010.607 10.607z"/>
@@ -297,7 +297,7 @@ class HtmlBuilder:
         <div class="stat-card">
           <p class="stat-label">{label}</p>
           <div class="stat-value-row">
-            <span class="status-dot" style="background:{color};"></span>
+            <span class="status-dot" style="background:{color};flex-shrink:0;"></span>
             <span class="stat-number">{val}</span>
           </div>
         </div>""" for label, val, color in kpis)
@@ -360,7 +360,12 @@ class HtmlBuilder:
               </table>
             </div>"""
         else:
-            rented_content = cls._empty_row(6, "No items currently rented.")
+            rented_content = f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <tbody>{cls._empty_row(6, "No items currently rented.")}</tbody>
+              </table>
+            </div>"""
  
         out.append(cls._summ_panel(
             title="Currently Rented Items",
@@ -419,7 +424,12 @@ class HtmlBuilder:
               </table>
             </div>"""
         else:
-            req_table = cls._empty_row(7, "No rental requests found.")
+            req_table = f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <tbody>{cls._empty_row(7, "No rental requests found.")}</tbody>
+              </table>
+            </div>"""
  
         out.append(cls._summ_panel(
             title="Rental Requests",
@@ -428,7 +438,7 @@ class HtmlBuilder:
             content=breakdown + req_table
         ))
  
-        # 5. Maintenance & Other Statuses
+        # Maintenance & Other Statuses
         maintenance = data.get("maintenance_assets", [])
         other       = data.get("other_assets",       [])
         combined    = maintenance + other
@@ -461,7 +471,12 @@ class HtmlBuilder:
               </table>
             </div>"""
         else:
-            other_content = cls._empty_row(6, "No items under maintenance or other statuses.")
+            other_content = f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <tbody>{cls._empty_row(6, "No items under maintenance or other statuses.")}</tbody>
+              </table>
+            </div>"""
  
         out.append(cls._summ_panel(
             title="Maintenance & Other Statuses",
@@ -470,11 +485,10 @@ class HtmlBuilder:
             content=other_content
         ))
  
-        # 6. Asset Timeline
+        # Asset Timeline
         timeline = data.get("timeline", [])
  
         if not timeline:
-            # Show a helpful notice if the columns aren't present yet
             timeline_content = f"""
             <div class="summ-notice">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -536,7 +550,7 @@ class HtmlBuilder:
         ))
  
         return "\n".join(out)
-    
+ 
     # Summary helpers
     @staticmethod
     def _summ_panel(title: str, count, color: str, content: str) -> str:
@@ -560,7 +574,12 @@ class HtmlBuilder:
     def _summ_asset_table(cls, assets: list) -> str:
         """Read-only asset table for In-Use section of the summary."""
         if not assets:
-            return cls._empty_row(5)
+            return f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <tbody>{cls._empty_row(5)}</tbody>
+              </table>
+            </div>"""
         rows = ""
         for a in assets:
             aid  = a.get("asset_id", "")
