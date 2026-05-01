@@ -254,3 +254,78 @@ class Rental:
         finally:
             try: cursor.close(); conn.close()
             except Exception: pass
+
+    @classmethod
+    def return_rental(cls, rental_id: int, user: dict) -> tuple:
+        """
+        Mark a rental as returned.
+        - Sets rentals.rental_status = 'Returned' and rental_returned = NOW()
+        - Sets assets.asset_status   = 'available'
+
+        Security: faculty/student can only return their own rentals.
+                  Admin can return any rental (user=None).
+
+        Returns (True, None) on success or (False, error_string) on failure.
+        """
+        conn = cls._connect()
+        if conn is None:
+            return False, "Database connection failed"
+        try:
+            cursor = conn.cursor(dictionary=True)
+
+            # Fetch the rental and verify it is still active
+            cursor.execute(
+                """SELECT r.rental_id, r.asset_id, r.rental_status,
+                          rr.student_id, rr.faculty_id
+                   FROM rentals r
+                   JOIN rental_requests rr ON rr.request_id = r.request_id
+                   WHERE r.rental_id = %s""",
+                (rental_id,),
+            )
+            rental = cursor.fetchone()
+
+            if not rental:
+                return False, "Rental not found"
+
+            if rental["rental_status"] == "Returned":
+                return False, "This rental has already been returned"
+
+            if rental["rental_status"] not in ("Active", "Late"):
+                return False, "Rental cannot be returned in its current state"
+
+            # Ownership check, skip for admin
+            if user and user.get("role") != "admin":
+                uid    = user["user_id"]
+                role   = user["role"]
+                owner  = (
+                    rental["student_id"] if role == "student"
+                    else rental["faculty_id"]
+                )
+                if owner != uid:
+                    return False, "You can only return your own rentals"
+
+            # Mark rental as returned
+            cursor.execute(
+                """UPDATE rentals
+                   SET rental_status   = 'Returned',
+                       rental_returned = NOW()
+                   WHERE rental_id = %s""",
+                (rental_id,),
+            )
+
+            # Free up the asset
+            cursor.execute(
+                "UPDATE assets SET asset_status = 'available' WHERE asset_id = %s",
+                (rental["asset_id"],),
+            )
+
+            conn.commit()
+            return True, None
+
+        except Error as exc:
+            try: conn.rollback()
+            except Exception: pass
+            return False, str(exc)
+        finally:
+            try: cursor.close(); conn.close()
+            except Exception: pass

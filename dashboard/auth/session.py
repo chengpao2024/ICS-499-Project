@@ -13,13 +13,13 @@ import config
 
 class SessionResolver:
 
-    # ── Public API ────────────────────────────────────
+    # Public API
     @classmethod
     def get_current_user(cls) -> dict | None:
         """Return user dict or None (caller redirects to login)."""
         cookies = cls._parse_cookies()
 
-        # Strategy 1: DB-backed sessions table (requires PHP team integration)
+        # Strategy 1: DB-backed sessions table
         token = cookies.get(config.SESSION_COOKIE_NAME, "")
         if token:
             user = cls._from_db_token(token)
@@ -33,7 +33,7 @@ class SessionResolver:
 
         return None
 
-    # ── Cookie parsing ────────────────────────────────
+    # Cookie parsing
     @staticmethod
     def _parse_cookies() -> dict:
         cookies = {}
@@ -44,7 +44,7 @@ class SessionResolver:
                 cookies[k.strip()] = v.strip()
         return cookies
 
-    # ── Strategy 1: DB sessions table ────────────────
+    # Strategy 1: DB sessions table
     @classmethod
     def _from_db_token(cls, token: str) -> dict | None:
         try:
@@ -70,7 +70,7 @@ class SessionResolver:
             try: cursor.close(); conn.close()
             except Exception: pass
 
-    # ── Strategy 2: PHP session file ─────────────────
+    # Strategy 2: PHP session file
     @classmethod
     def _from_php_session(cls, session_id: str) -> dict | None:
         if not re.match(r"^[a-zA-Z0-9,\-]+$", session_id):
@@ -115,7 +115,10 @@ class SessionResolver:
                 "department":   details.get("department", ""),
             }
         except Error:
-            # DB unavailable — return minimal dict so page can render
+            # DB unavailable — cant verify user
+            return None
+        
+            # This was for the bypass to render the page
             return {
                 "user_id": 0, "username": identifier,
                 "display_name": identifier, "email": "",
@@ -125,7 +128,7 @@ class SessionResolver:
             try: cursor.close(); conn.close()
             except Exception: pass
 
-    # ── DB lookups ────────────────────────────────────
+    # DB lookups
     @staticmethod
     def _fetch_user_by_id(cursor, role: str, user_id: int) -> dict:
         """Look up user record by primary key — exact, no ambiguity."""
@@ -171,7 +174,7 @@ class SessionResolver:
                     return dict(row)
 
         except Error:
-            pass
+            return None
         return defaults
 
     @staticmethod
@@ -222,10 +225,10 @@ class SessionResolver:
                     return dict(row)
 
         except Error:
-            pass
+            return None
         return defaults
 
-    # ── Session path resolver ─────────────────────────
+    # Session path resolver
     @staticmethod
     def _resolve_session_path() -> str:
         """Find PHP session path dynamically instead of hardcoding it."""
@@ -255,7 +258,7 @@ class SessionResolver:
 
         return config.PHP_SESSION_PATH
 
-    # ── PHP session deserialiser ──────────────────────
+    # PHP session deserialiser
     @staticmethod
     def _parse_php_session_data(data: str) -> dict:
         """Parse PHP native session serialisation format (scalar values only)."""

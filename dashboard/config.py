@@ -6,13 +6,14 @@
 # Auth / Redirects
 # -------------------------
 PHP_LOGIN_URL = "http://localhost/index.php"
+PHP_LOGOUT_URL = "http://localhost/logout.php"
 
 
 # -------------------------
 # Database
 # -------------------------
 DB_CONFIG = {
-    "host": "localhost",
+    "host": "127.0.0.1",
     "user": "root",
     "password": "",
     "database": "cat_db",
@@ -29,12 +30,14 @@ STATUS_LABELS = {
     "available": "Available",
     "in-use": "In Use",
     "maintenance": "Maintenance",
+    "reserved": "Reserved",
 }
 
 STATUS_CLASSES = {
     "available": "badge-available",
     "in-use": "badge-inuse",
     "maintenance": "badge-maintenance",
+    "reserved": "badge-reserved",
 }
 
 

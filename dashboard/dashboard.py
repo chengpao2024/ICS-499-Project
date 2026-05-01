@@ -10,60 +10,56 @@
 #    models/rental.py      → Rental            (DB queries for rentals)
 #    views/html_builder.py → HtmlBuilder       (HTML fragment generation)
 # =============================================================================
-import sys
+
+import cgi
+import cgitb
 import os
-import traceback
+import sys
+import html
+import io
+import json
 
-# Add dashboard dir to path FIRST before any other imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+cgitb.enable(display=0, logdir="D:/ics499/tmp")
 
-def _fatal(message: str):
-    """Print a valid CGI response and exit. Safe to call at any point."""
-    sys.stdout.write("Content-Type: text/plain\r\n\r\n")
-    sys.stdout.write(message)
-    sys.stdout.flush()
-    sys.exit(1)
+import config
+from auth.session       import SessionResolver
+from models.asset       import Asset
+from models.rental      import Rental
+from views.html_builder import HtmlBuilder
 
-try:
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-except Exception as e:
-    _fatal("stdout wrap failed: " + str(e))
+import warnings
+warnings.filterwarnings("ignore")
 
-try:
-    import cgi
-    import html
-    import json
-    import config
-    from auth.session       import SessionResolver
-    from models.asset       import Asset
-    from models.rental      import Rental
-    from views.html_builder import HtmlBuilder
-except Exception:
-    _fatal("=== IMPORT ERROR ===\n\n" + traceback.format_exc())
-
-
-# ─────────────────────────────────────────────
 #  HTTP UTILITIES
-# ─────────────────────────────────────────────
 def redirect(url: str):
     print(f"Status: 302 Found\nLocation: {url}\n")
     sys.exit(0)
 
 
 def json_response(data: dict):
-    print("Content-Type: application/json; charset=utf-8\n")
-    print(json.dumps(data))
+    body = json.dumps(data).encode("utf-8")
+    try:
+        sys.stdout.flush()
+    except:
+        pass
+    sys.stdout.buffer.write(b"Content-Type: application/json; charset=utf-8\r\n\r\n")
+    sys.stdout.buffer.write(body)
+    sys.stdout.buffer.flush()
     sys.exit(0)
+
+def safe_json(fn):
+    try:
+        fn()
+    except Exception as exc:
+        json_response({"success": False, "error": str(exc)})
 
 
 def is_admin(user) -> bool:
     return user is not None and user.get("role") in config.ADMIN_ROLES
 
 
-# ─────────────────────────────────────────────
 #  TEMPLATE RENDERING
-# ─────────────────────────────────────────────
 def _load_template(name: str) -> str:
     path = os.path.join(os.path.dirname(__file__), "templates", name)
     with open(path, encoding="utf-8") as fh:
@@ -77,6 +73,8 @@ def _apply(page: str, replacements: dict) -> str:
 
 
 def render_admin(user, form, script_url: str) -> str:
+    from datetime import datetime
+ 
     view       = form.getvalue("view",       "inventory")
     search     = form.getvalue("search",     "")
     category   = form.getvalue("category",   "All Categories")
@@ -84,19 +82,54 @@ def render_admin(user, form, script_url: str) -> str:
     sort_by    = form.getvalue("sort_by",    "asset_id")
     sort_dir   = form.getvalue("sort_dir",   "asc")
     req_filter = form.getvalue("req_filter", "Pending")
-
-    if sort_by  not in config.SORT_FIELDS:       sort_by  = "asset_id"
-    if sort_dir not in ("asc", "desc"):           sort_dir = "asc"
-    if view     not in ("inventory", "rentals"):  view     = "inventory"
-
+ 
+    if sort_by  not in config.SORT_FIELDS:                     sort_by  = "asset_id"
+    if sort_dir not in ("asc", "desc"):                        sort_dir = "asc"
+    if view     not in ("inventory", "rentals", "summary"):    view     = "inventory"  # ← added "summary"
+ 
+    # Always needed (stat cards, navbar)
     stats        = Asset.get_stats()
     rental_stats = Rental.get_admin_stats()
-    assets       = Asset.get_list(search, category, status, sort_by, sort_dir)
     status_map   = {"All Statuses": "All Statuses", **config.STATUS_LABELS}
-
+ 
+    # Inventory view data
+    assets      = Asset.get_list(search, category, status, sort_by, sort_dir) \
+                  if view == "inventory" else []
+ 
+    # Rentals view data
     rental_reqs  = Rental.get_requests(None, req_filter) if view == "rentals" else []
     active_rents = Rental.get_active(None)               if view == "rentals" else []
-
+ 
+    # Summary view data
+    summary_html = ""
+    if view == "summary":
+        all_requests       = Rental.get_requests(None, "All")
+        summary_rentals    = Rental.get_active(None)
+        in_use_assets      = Asset.get_by_status("in-use")
+        maintenance_assets = Asset.get_by_status("maintenance")
+        other_assets       = Asset.get_other_status_assets()
+        timeline           = Asset.get_timeline()
+ 
+        # Tally request statuses in Python (no extra DB round-trip)
+        req_counts = {"Pending": 0, "Approved": 0, "Denied": 0}
+        for r in all_requests:
+            s = str(r.get("request_status", ""))
+            if s in req_counts:
+                req_counts[s] += 1
+ 
+        summary_data = {
+            "stats":              stats,
+            "in_use_assets":      in_use_assets,
+            "active_rentals":     summary_rentals,
+            "maintenance_assets": maintenance_assets,
+            "other_assets":       other_assets,
+            "all_requests":       all_requests,
+            "req_counts":         req_counts,
+            "timeline":           timeline,
+            "generated_at":       datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        summary_html = HtmlBuilder.summary_html(summary_data)
+ 
     return _apply(_load_template("dashboard_admin.html"), {
         "%SCRIPT_URL%":          script_url,
         "%USER_NAME%":           html.escape(user["display_name"]),
@@ -104,7 +137,7 @@ def render_admin(user, form, script_url: str) -> str:
         "%STATS_AVAILABLE%":     str(stats["available"]),
         "%STATS_IN_USE%":        str(stats["in_use"]),
         "%STATS_MAINTENANCE%":   str(stats["maintenance"]),
-        "%STATS_RENTED%":        str(stats["rented"]),
+        "%STATS_RENTED%":        str(stats.get("rented", 0)),
         "%CAT_OPTIONS%":         HtmlBuilder.options(config.DEFAULT_CATEGORIES, category),
         "%ST_OPTIONS%":          HtmlBuilder.options(config.DEFAULT_STATUSES, status, status_map),
         "%SEARCH_VALUE%":        html.escape(search),
@@ -119,15 +152,21 @@ def render_admin(user, form, script_url: str) -> str:
         "%REQ_FILTER%":          req_filter,
         "%RENTAL_REQUEST_ROWS%": HtmlBuilder.rental_request_rows(rental_reqs, "admin"),
         "%ACTIVE_RENTAL_ROWS%":  HtmlBuilder.active_rental_rows(active_rents, "admin"),
+        # ── View visibility ──
         "%INV_ACTIVE%":          "active" if view == "inventory" else "",
         "%RENT_ACTIVE%":         "active" if view == "rentals"   else "",
+        "%SUMM_ACTIVE%":         "active" if view == "summary"   else "",   # ← new
         "%INV_HIDDEN%":          "" if view == "inventory" else 'style="display:none"',
         "%RENT_HIDDEN%":         "" if view == "rentals"   else 'style="display:none"',
+        "%SUMM_HIDDEN%":         "" if view == "summary"   else 'style="display:none"', # ← new
+        # ── Rental request filter tabs ──
         "%RF_PENDING_ACTIVE%":   "active" if req_filter == "Pending"  else "",
         "%RF_APPROVED_ACTIVE%":  "active" if req_filter == "Approved" else "",
         "%RF_DENIED_ACTIVE%":    "active" if req_filter == "Denied"   else "",
         "%RF_ALL_ACTIVE%":       "active" if req_filter == "All"      else "",
         "%VIEW%":                view,
+        # ── Summary ──
+        "%SUMMARY_HTML%":        summary_html,                               # ← new
     })
 
 
@@ -174,9 +213,7 @@ def render_user(user, form, script_url: str) -> str:
     })
 
 
-# ─────────────────────────────────────────────
 #  MAIN — CGI ROUTER
-# ─────────────────────────────────────────────
 def main():
     form       = cgi.FieldStorage()
     method     = os.environ.get("REQUEST_METHOD", "GET").upper()
@@ -184,7 +221,16 @@ def main():
     script_url = os.environ.get("REQUEST_URI", "/dashboard/dashboard.py").split("?")[0]
 
     if action == "logout":
-        redirect(config.PHP_LOGIN_URL)
+        response = (
+            "Status: 302 Found\r\n"
+            f"Location: {config.PHP_LOGOUT_URL}\r\n"
+            f"Set-Cookie: {config.SESSION_COOKIE_NAME}=; "
+            "expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; HttpOnly; SameSite=Lax\r\n"
+            "\r\n"
+        ).encode("ascii")
+        sys.stdout.buffer.write(response)
+        sys.stdout.buffer.flush()
+        sys.exit(0)
 
     user = SessionResolver.get_current_user()
     if user is None:
@@ -192,7 +238,7 @@ def main():
 
     role = user["role"]
 
-    # Admin-only AJAX endpoints 
+    # Admin-only AJAX endpoints
     if action in ("delete", "update_status", "update_field",
                   "approve_request", "deny_request"):
         if not is_admin(user):
@@ -247,9 +293,25 @@ def main():
         due_date   = form.getvalue("due_date",  "").strip()
         if not asset_id.isdigit() or not start_date or not due_date:
             json_response({"success": False, "error": "Missing required fields"})
-        ok, result = Rental.create_request(user, int(asset_id), start_date, due_date)
-        json_response({"success": True, "request_id": result} if ok
-                      else {"success": False, "error": result})
+        def _do():
+            ok, result = Rental.create_request(user, int(asset_id), start_date, due_date)
+            json_response({"success": True, "request_id": result} if ok
+                        else {"success": False, "error": result})
+        safe_json(_do)
+
+
+    # return_rental — available to all authenticated users
+    # faculty/student can only return their own; admin can return any
+    if action == "return_rental" and method == "POST":
+        rental_id = form.getvalue("id", "")
+        if not rental_id.isdigit():
+            json_response({"success": False, "error": "Invalid rental ID"})
+        def _do():
+            acting_user = None if is_admin(user) else user
+            ok, error = Rental.return_rental(int(rental_id), acting_user)
+            json_response({"success": True} if ok
+                        else {"success": False, "error": error})
+        safe_json(_do)
 
     # Page renders
     page = render_admin(user, form, script_url) if is_admin(user) \

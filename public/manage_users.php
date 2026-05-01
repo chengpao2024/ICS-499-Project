@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once("config/db.php");
+require_once(__DIR__ . "/../config/db.php");
 
 // check if admin is logged in
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: index.php");
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {    // Edited to also check if user id is set and adjusted to check for admin role
+    header("Location: /index.php");
     exit();
 }
 

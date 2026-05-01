@@ -162,3 +162,90 @@ class Asset:
         finally:
             try: cursor.close(); conn.close()
             except Exception: pass
+
+    @classmethod
+    def get_by_status(cls, status: str) -> list:
+        """Return all assets matching a single status value."""
+        return cls.get_list(status=status)
+ 
+    @classmethod
+    def get_other_status_assets(cls) -> list:
+        """
+        Return assets whose status falls outside the four standard values.
+        Useful for surfacing 'reserved' or any future custom statuses.
+        """
+        conn = cls._connect()
+        if conn is None:
+            return []
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT asset_id,
+                       asset_name     AS name,
+                       asset_category AS category,
+                       asset_serial   AS serial_number,
+                       asset_location AS location,
+                       asset_status   AS status
+                FROM   assets
+                WHERE  asset_status NOT IN ('available','in-use','maintenance','rented')
+                ORDER  BY asset_id ASC
+            """)
+            return cursor.fetchall()
+        except Error:
+            return []
+        finally:
+            try: cursor.close(); conn.close()
+            except Exception: pass
+ 
+    @classmethod
+    def get_timeline(cls) -> list:
+        """
+        Return all assets ordered by creation date, including
+        created_at and updated_at if those columns exist in the schema.
+ 
+        If neither column is present the method returns an empty list —
+        the caller (HtmlBuilder.summary_html) renders an informational
+        notice telling the admin to add the columns.
+ 
+        To enable this section, run:
+            ALTER TABLE assets
+              ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                         ON UPDATE CURRENT_TIMESTAMP;
+        """
+        conn = cls._connect()
+        if conn is None:
+            return []
+        try:
+            cursor = conn.cursor(dictionary=True)
+ 
+            has_created = cls._col_exists(cursor, "created_at")
+            has_updated = cls._col_exists(cursor, "updated_at")
+ 
+            if not has_created and not has_updated:
+                return []          # Caller will display the "add columns" notice
+ 
+            date_parts = []
+            if has_created:
+                date_parts.append("created_at")
+            if has_updated:
+                date_parts.append("updated_at")
+ 
+            col_str  = ", ".join(date_parts)
+            order_by = "created_at DESC" if has_created else "asset_id DESC"
+ 
+            cursor.execute(f"""
+                SELECT asset_id,
+                       asset_name     AS name,
+                       asset_category AS category,
+                       asset_status   AS status,
+                       {col_str}
+                FROM   assets
+                ORDER  BY {order_by}
+            """)
+            return cursor.fetchall()
+        except Error:
+            return []
+        finally:
+            try: cursor.close(); conn.close()
+            except Exception: pass
