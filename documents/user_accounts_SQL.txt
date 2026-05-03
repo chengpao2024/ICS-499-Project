@@ -28,9 +28,3 @@ INSERT INTO faculty (
     'Smith',
     'Computer Science'
 );
-
-
-//username/password
-//admin admin
-//student1@gmail.com student
-//teacher1@gmail.com teacher
