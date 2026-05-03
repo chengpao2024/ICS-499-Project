@@ -303,6 +303,51 @@ class HtmlBuilder:
         </div>""" for label, val, color in kpis)
         out.append(f'<div class="summ-kpi-grid">{kpi_cards}</div>')
  
+        # All Assets
+        all_assets = data.get("all_assets", [])
+        all_assets_content = ""
+        if all_assets:
+            all_rows = ""
+            for a in all_assets:
+                aid   = a.get("asset_id", "")
+                name  = html.escape(str(a.get("name",          "—")))
+                cat   = html.escape(str(a.get("category",      "—")))
+                sn    = html.escape(str(a.get("serial_number", "—")))
+                loc   = html.escape(str(a.get("location",      "—")))
+                badge = cls.status_badge_static(str(a.get("status", "")))
+                all_rows += f"""<tr>
+                  <td class="asset-id">{aid}</td>
+                  <td style="font-weight:500;">{name}</td>
+                  <td>{cat}</td>
+                  <td class="serial">{sn}</td>
+                  <td>{loc}</td>
+                  <td>{badge}</td>
+                </tr>"""
+            all_assets_content = f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <thead><tr>
+                  <th>ID</th><th>Name</th><th>Category</th>
+                  <th>Serial</th><th>Location</th><th>Status</th>
+                </tr></thead>
+                <tbody>{all_rows}</tbody>
+              </table>
+            </div>"""
+        else:
+            all_assets_content = f"""
+            <div class="table-wrapper">
+              <table class="asset-table">
+                <tbody>{cls._empty_row(6)}</tbody>
+              </table>
+            </div>"""
+
+        out.append(cls._summ_panel(
+            title="All Assets",
+            count=len(all_assets),
+            color="#6366f1",
+            content=all_assets_content
+        ))
+
         # Active In-Use Items
         in_use = data.get("in_use_assets", [])
         out.append(cls._summ_panel(

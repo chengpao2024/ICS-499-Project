@@ -105,6 +105,7 @@ def render_admin(user, form, script_url: str) -> str:
     if view == "summary":
         all_requests       = Rental.get_requests(None, "All")
         summary_rentals    = Rental.get_active(None)
+        all_assets         = Asset.get_list()
         in_use_assets      = Asset.get_by_status("in-use")
         maintenance_assets = Asset.get_by_status("maintenance")
         other_assets       = Asset.get_other_status_assets()
@@ -119,6 +120,7 @@ def render_admin(user, form, script_url: str) -> str:
  
         summary_data = {
             "stats":              stats,
+            "all_assets":         all_assets,
             "in_use_assets":      in_use_assets,
             "active_rentals":     summary_rentals,
             "maintenance_assets": maintenance_assets,
